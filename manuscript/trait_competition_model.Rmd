@@ -1,0 +1,92 @@
+---
+title: "competition_traits"
+author: "Andrew Kleinhesselink"
+date: "December 5, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+Can we predict the outcome of competition from a small set of functional traits? 
+
+We develop a simple quasi-mechanistic model of how traits influence plant fitness and competition and parameterise it with experimental field data on competition between 20 species of annual plants. 
+
+We then use the model to predict performance of new species.  
+
+
+## Introduction
+
+Plant functional traits provide a common currency for comparing diverse species.  A primary goal of functional trait ecology is to be able to predict the outcome of competition between two species with data on each species' functional traits. A successful model would be a useful tool for predicting the outcome of global change in plant communities, predict the success and impact of exotic introduced species, and would provide a more quantitative understanding of how functional diversity within and across communities is maintained.
+
+We (propose to) build a simple model of how traits influence plant competition that can be parameterised from purely phenomenological data on species performance and species traits.  We start with the basic structure of the annual plant model used in a number of studies of plant coexistence and competition:
+
+$N_{i,t+1}/{N_{i,t}} = (1 - g_i)s_i + g_i\frac{\lambda_i}{1 + \sum_{j=1}^S\alpha_{ij}g_jN_j}$, 
+
+where $N_i$ is the number of competitors of species $i$ at time $t$, $\lambda_i$ is its per capita fecundity in the absence of competition and $\alpha_{ij}$ is the per capita effect of species $j$ on species $i$. $g_i$ and $s_i$ give the germination and survival rate of individuals that are seeds. 
+
+This model implies that maximum individual seed production per individual is given by $\lambda$, and that individual performance declines in proportion to the density of competitors. The parameters in the model are strictly phenomenological, the strength of this is that they capture the influence of multiple unknown resources, environmental stress and shared predators.  However this is a weakness for developing a mechanistic understanding of how plant traits influence competition. Moreover, there is no way to predict the performance of additional species from such a model--the parameters lambda and alpha must be measured for every species.
+
+Functional trait ecology predicts that these parameters are determined, at least in part, by universally measurable functional traits. 
+
+## Quasi-mechanistic growth model 
+
+We begin by re-expressing the commmon annual plant model in a way that can be easily related to functional traits of annual plants. We assume that seed output of each individual plant is proportional to the amount of resources that individual captures. We uses resources as a generic term for all resources (light, N, and P) that plants acquire during growth.  
+
+We can calculate total resource capture over the course of the growing season as $ud$ where $u$ (g d^-1^) is net rate of resource capture per day and $d$ is the duration of plant activity in days. Thus a plant that has a faster net rate of resource capture and a longer duration of activity will gain more resources over the course of the season. The seed production per individual, $r_i$ is given by $r_i = u_id_i/m_i$ where $m_i$ is mass per seed.  
+
+The annual plant model predicts that per capita fecundity decreases in proportion to the inverse of competitor density. In a single species stand this implies dividing up the pool of shared resources and giving each individual an equal share. In mixed species communities, each individual's share of the resource pool is weighted by species specific per capita competition coefficients, $\alpha_ij$. 
+
+This has a straightforward connection to net rates of resource gain: species that gain resources at a faster rate should have stronger effect on their competitors and in turn be less affected by their competitors. Likewise a species which grows for a longer period of time will acquire more resources and have a stronger effect on its competitors than a species that grows for only a short period of time. We can incorporate both resource gain rates and the duration of the growth period into the annual plant model: 
+
+$N_{i,t+1}/{N_{i,t}} = (1-g_i)s_i + g_i\frac{1}{m_i}\frac{u_id_i}{1 +\sum^S_{j=1}(u_i/u_j)p_{ij}g_jN_{j,t}}$, 
+
+where $p_{ij}$ is the fraction of time that species $i$ is active that competitor $j$ is also active, and is given by $p_{ij} = \min( d_j/d_i, 1)$. 
+
+We can relax the assumption that species use exactly the same resource by including an additional term in the model that quantifies the overlap between pairs of species in the type of resources they use. For instance, if species $i$ draws resources from deeper soil layers and species $j$ takes resources from shallower soil then they will have less of an effect on each other than if they used resources from exactly the same soil depth. A general measure of resource overlap between species $i$ and $j$ could be captured by a single additional parameter $\phi_{ij} \in (0,1) $ varying between zero and one. We might expect that $\phi_{ij} = \phi_{ji}$, although it might not be if species $i$ uses a subset of resources used by $j$ but $j$ uses all of the resources used by $i$. Incorporating resource overlap into the equation above, 
+
+$N_{i,t+1}/{N_{i,t}} = (1-g_i)s_i + g_i\frac{1}{m_i}\frac{u_id_i}{1 +\sum^S_{j=1}(u_i/u_j)\phi_{ij}p_{ij}g_jN_{j,t}}$. 
+
+## Parameter estimation 
+
+We assume that the demographic parameters $g_i$, $s_i$, $m_i$ and $d_i$ in the above model are all measured directly--although they could themselves be related to other functional traits. We must estimate species specific rates of net resource gain, $u_i$ and pairwise measures defining resource overlap between species $\phi_{ij}$. 
+
+We model $u_i$ as a function of traits related to maximum resource uptake rate such as SLA, SRL, leaf nitrogen content, height and leaf area. Each of these traits is thought to increase how rapidly a species can aquire new resources.  On the other hand, $u_i$ is a balance of resource gains and losses and some of the same traits that are associated with rapid resource uptake, may be cause more rapid resource loss. For instance a species with high SLA may grow new leaves rapidly but at the cost of shorter leaf lifespan and therefore more resource loss. The balance of gain and loss will ultimately determine $u_i$.  Thus these traits may represent a trade-off between resource acquisition and resource use efficiency.  However, since we are concerned with rapidly growing annual plants growing over a short seasonal window (< 200 days), we suspect that rates of tissue loss will generally be minimal compared with rates of resource uptake. 
+
+We can model the influence of the functional traits on $u_i$ directly using a linear model: 
+
+$\bf u \sim \bf X \beta + \bf \zeta + \epsilon_1$, 
+
+where $\bf u$ is a vector of species uptake rates to be estimated, $\bf X$ is a matrix of functional trait covariates for each species and $\bf \beta$ is a vector of coefficients giving the effects of each functional trait on the uptake rate of each species.  $\bf {\zeta}$ is included as a varying intercept to account for species-level random effects.  
+
+Niche overlap $\phi_{ij}$ between species should be related to species dissimilarity in functional traits.  We can calculate a vector of trait dissimilarity $Z_{ij}$ between species $i$ and $j$ in terms of univariate distance: 
+
+$Z_{ijk} = Y_{ik} - Y_{jk}$, 
+
+where $Y_{ik}$ is the value of functional trait $k$ for species $i$. Because it is a continuous variable varying between zero and one we model $\phi_{ij}$ using a beta distribution.  We can then estimate niche overlap between species $i$ and $j$ using a linear model: 
+
+$\phi_{jk} \sim \tt BETA( \bf Z_{ijk} \gamma )$, 
+
+where $\gamma$ is a vector of coefficients to be estimated. 
+
+We estimate parameters $\beta, \gamma, \epsilon_1$ and $\epsilon_2$ using a Bayesian framework implimented in STAN. 
+
+## Methods 
+
+### Demographic Data 
+
+We use data from the Kraft et al. (2015) to parameterize our model.  These data includes rates of per capita seed production for 20 species and average functional trait values for each species.  Seed production per individual was measured with varying densities of inter and intr-specific competitors. 
+
+### Community 
+
+We collected community-level functional 
+
+### Trait Data 
+
+## Results 
+
